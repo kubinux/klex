@@ -26,4 +26,3 @@ if (DEFINED GTEST_ROOT)
     add_test(NAME klex-unit-tests COMMAND klex-unit-tests)
 endif()
 
-    
