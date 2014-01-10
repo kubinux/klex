@@ -18,7 +18,7 @@
 
 #include <istream>
 #include <memory>
-#include <string>
+#include <vector>
 
 namespace klex
 {
@@ -26,12 +26,13 @@ namespace klex
     class InputStream
     {
     public:
-        InputStream(std::unique_ptr<std::istream>&& utf8_stream,
-                    std::string const& name);
+        explicit InputStream(std::unique_ptr<std::istream>&& utf8_stream);
+
+        int get();
 
     private:
         std::unique_ptr<std::istream> utf8_stream_;
-        std::string name_;
+        std::vector<int> buffer_;
     };
 
 } // close klex namespace
