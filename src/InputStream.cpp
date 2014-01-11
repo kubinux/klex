@@ -23,7 +23,7 @@ namespace
     int num_octets_per_code_point(int first_octet)
     {
         int res = 0;
-        if ((first_octet & 0x80) == 0x0)
+        if (first_octet != 0 && (first_octet & 0x80) == 0x0)
         {
             res = 1;
         }
