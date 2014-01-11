@@ -83,9 +83,20 @@ namespace
                 throw std::runtime_error("UTF-8: unexpected EOF");
             }
 
+            if ((octet & 0xC0) != 0x80)
+            {
+                throw std::runtime_error("UTF-8: invalid continuation octet"); 
+            }
+
             code_point <<= 6;
             code_point |= (0x3F & octet);
         }
+
+        if (code_point > 0x10FFFF)
+        {
+            throw std::runtime_error("UTF-8: invalid sequence");
+        }
+
         return code_point;
     }
 

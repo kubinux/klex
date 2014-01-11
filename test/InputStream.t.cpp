@@ -30,6 +30,14 @@
 // by Markus Kuhn.
 //
 
+//
+// A quick way to obtain the utf-8 bytes for a given code point
+// is to fire up Python, for example:
+//
+// >>> unichr(0x80).encode('utf-8')
+// '\xc2\x80'
+//
+
 namespace
 {
 
@@ -82,6 +90,191 @@ TEST(InputStream, nul_byte)
 
     klex::InputStream is(make_input_stream(input_data));
     ASSERT_EQ(0x03ba, is.get());
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, first_possible_sequence_of_len_1)
+{
+    // Nul (U-00000000) is not allowed in our case
+    // so we start with U-00000001.
+    std::string input_data{"\x1"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0x1, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, first_possible_sequence_of_len_2)
+{
+    // U-00000080
+    std::string input_data{"\xc2\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0x80, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, first_possible_sequence_of_len_3)
+{
+    // U-00000800
+    std::string input_data{"\xe0\xa0\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0x800, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, first_possible_sequence_of_len_4)
+{
+    // U-00010000
+    std::string input_data{"\xf0\x90\x80\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0x10000, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, last_possible_sequence_of_len_1)
+{
+    // U-0000007F
+    std::string input_data{"\x7f"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0x7f, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, last_possible_sequence_of_len_2)
+{
+    // U-000007FF
+    std::string input_data{"\xdf\xbf"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0x7ff, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, last_possible_sequence_of_len_3)
+{
+    // U-0000FFFF
+    std::string input_data{"\xef\xbf\xbf"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0xffff, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, last_possible_sequence_of_len_4)
+{
+    // U-0010FFFF
+    std::string input_data{"\xf4\x8f\xbf\xbf"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0x10ffff, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, code_point_0000D7FF)
+{
+    // U-0000D7FF
+    std::string input_data{"\xed\x9f\xbf"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0xd7ff, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, code_point_0000E000)
+{
+    // U-0000D7FF
+    std::string input_data{"\xee\x80\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0xe000, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, code_point_0000FFFD)
+{
+    // U-0000FFFD
+    std::string input_data{"\xef\xbf\xbd"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_EQ(0xfffd, is.get());
+    ASSERT_EQ(0x0, is.get());
+}
+
+TEST(InputStream, code_point_00110000)
+{
+    // U-00110000
+    std::string input_data{"\xf4\x90\x80\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_first_continuation_octet_11)
+{
+    std::string input_data{"\xee\xc0\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_first_continuation_octet_01)
+{
+    std::string input_data{"\xee\x40\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_first_continuation_octet_00)
+{
+    std::string input_data{"\xee\x00\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_second_continuation_octet_11)
+{
+    std::string input_data{"\xee\x80\xc0"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_second_continuation_octet_01)
+{
+    std::string input_data{"\xee\x80\x40"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_second_continuation_octet_00)
+{
+    std::string input_data{"\xee\x80\x00"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_third_continuation_octet_11)
+{
+    std::string input_data{"\xf4\x90\x80\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_third_continuation_octet_01)
+{
+    std::string input_data{"\xf4\x90\x80\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_third_continuation_octet_00)
+{
+    std::string input_data{"\xf4\x90\x80\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_first_octet_x80)
+{
+    std::string input_data{"\x80"};
+    klex::InputStream is{make_input_stream(input_data)};
+    ASSERT_THROW(is.get(), std::runtime_error);
+}
+
+TEST(InputStream, invalid_first_octet_xBF)
+{
+    std::string input_data{"\xbf"};
+    klex::InputStream is{make_input_stream(input_data)};
     ASSERT_THROW(is.get(), std::runtime_error);
 }
 
