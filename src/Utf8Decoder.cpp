@@ -78,20 +78,18 @@ namespace klex
         }
         else if ((result & 0xF0) == 0xE0)
         {
+            int current_value = result & 0xF;
             if (result == 0xE0)
             {
-                result &= 0xF;
-                result = utf8_continue<0xA0, 0xBF>(is, result);
+                result = utf8_continue<0xA0, 0xBF>(is, current_value);
             }
             else if (result == 0xED)
             {
-                result &= 0xF;
-                result = utf8_continue<0x80, 0x9F>(is, result);
+                result = utf8_continue<0x80, 0x9F>(is, current_value);
             }
             else
             {
-                result &= 0xF;
-                result = utf8_continue(is, result);
+                result = utf8_continue(is, current_value);
             }
             if (result != Utf8Decoder::INVALID)
             {
@@ -100,20 +98,18 @@ namespace klex
         }
         else if (result <= 0xF4)
         {
+            int current_value = result & 0x7;
             if (result == 0xF0)
             {
-                result &= 0x7;
-                result = utf8_continue<0x90, 0xBF>(is, result);
+                result = utf8_continue<0x90, 0xBF>(is, current_value);
             }
             else if (result == 0xF4)
             {
-                result &= 0x7;
-                result = utf8_continue<0x80, 0x8F>(is, result);
+                result = utf8_continue<0x80, 0x8F>(is, current_value);
             }
             else
             {
-                result &= 0x7;
-                result = utf8_continue(is, result);
+                result = utf8_continue(is, current_value);
             }
             if (result != Utf8Decoder::INVALID)
             {
