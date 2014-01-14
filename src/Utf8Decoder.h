@@ -13,26 +13,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef INPUTSTREAM_H_INCLUDED_8YDFSC1N
-#define INPUTSTREAM_H_INCLUDED_8YDFSC1N
+#ifndef UTF8DECODER_H_INCLUDED_IYQRDOZO
+#define UTF8DECODER_H_INCLUDED_IYQRDOZO
 
 #include <istream>
-#include <memory>
-#include <vector>
 
 namespace klex
 {
 
-    class InputStream
+    class Utf8Decoder
     {
     public:
-        explicit InputStream(std::unique_ptr<std::istream>&& stream);
+        static int const INVALID;
 
-        int get();
-
-    private:
-        std::unique_ptr<std::istream> stream_;
-        std::vector<int> buffer_;
+        int decode(std::istream& is) const;
     };
 
 } // close klex namespace
