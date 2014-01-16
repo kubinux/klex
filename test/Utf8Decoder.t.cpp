@@ -96,9 +96,25 @@ TEST(Utf8Decoder, bytes_C2_80)
     ASSERT_EQ(EOF, decoder.decode(is));
 }
 
+TEST(Utf8Decoder, bytes_C2_BF)
+{
+    std::istringstream is("\xC2\xBF");
+    klex::Utf8Decoder decoder;
+    ASSERT_EQ(0xBF, decoder.decode(is));
+    ASSERT_EQ(EOF, decoder.decode(is));
+}
+
 TEST(Utf8Decoder, bytes_C2_7F)
 {
     std::istringstream is("\xC2\x7F");
+    klex::Utf8Decoder decoder;
+    ASSERT_EQ(klex::Utf8Decoder::INVALID, decoder.decode(is));
+    ASSERT_EQ(EOF, decoder.decode(is));
+}
+
+TEST(Utf8Decoder, bytes_C2_C0)
+{
+    std::istringstream is("\xC2\xC0");
     klex::Utf8Decoder decoder;
     ASSERT_EQ(klex::Utf8Decoder::INVALID, decoder.decode(is));
     ASSERT_EQ(EOF, decoder.decode(is));
