@@ -21,6 +21,7 @@ include_directories(${klex_SOURCE_DIR}/src
 add_executable(klex-unit-tests
                InputStream.t.cpp
                Utf8Decoder.t.cpp
+               CodePointBuffer.t.cpp
                )
 
 target_link_libraries(klex-unit-tests
