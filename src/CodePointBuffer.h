@@ -26,9 +26,7 @@ namespace klex
     class CodePointBuffer
     {
     public:
-        typedef std::uint8_t size_type;
-
-        size_type size() const
+        std::uint8_t size() const
         {
             return end_ - begin_;
         }
@@ -38,7 +36,7 @@ namespace klex
             return begin_ == end_;
         }
 
-        size_type max_size() const
+        std::uint8_t max_size() const
         {
             return MAX_SIZE;
         }
@@ -62,18 +60,18 @@ namespace klex
             return data_[begin_];
         }
 
-        int operator[](size_type index) const
+        int operator[](std::uint8_t index) const
         {
             assert(index < size());
             return data_[begin_ + index];
         }
 
     private:
-        static constexpr size_type MAX_SIZE =
-            std::numeric_limits<size_type>::max();
+        static constexpr std::uint8_t MAX_SIZE =
+            std::numeric_limits<std::uint8_t>::max();
 
-        size_type begin_ = 0;
-        size_type end_ = 0;
+        std::uint8_t begin_ = 0;
+        std::uint8_t end_ = 0;
         int data_[MAX_SIZE + 1];
     };
 

@@ -75,7 +75,7 @@ TEST(CodePointBuffer, max_size)
 TEST(CodePointBuffer, push_pop_2)
 {
     klex::CodePointBuffer b;
-    klex::CodePointBuffer::size_type const max = b.max_size();
+    std::uint8_t const max = b.max_size();
     for (int i = 0; i < max; ++i)
     {
         b.push_back(i);

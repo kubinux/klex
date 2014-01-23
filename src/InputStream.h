@@ -16,6 +16,8 @@
 #ifndef INPUTSTREAM_H_INCLUDED_8YDFSC1N
 #define INPUTSTREAM_H_INCLUDED_8YDFSC1N
 
+#include "CodePointBuffer.h"
+#include <cstdint>
 #include <istream>
 #include <memory>
 #include <vector>
@@ -30,9 +32,17 @@ namespace klex
 
         int get();
 
+        int peek(std::uint8_t offset);
+
+        int get_line() const;
+
+        int get_column() const;
+
     private:
         std::unique_ptr<std::istream> stream_;
-        std::vector<int> buffer_;
+        CodePointBuffer buffer_;
+        int line_;
+        int column_;
     };
 
 } // close klex namespace

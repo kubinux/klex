@@ -31,6 +31,7 @@ namespace klex
             }
             else
             {
+                is.putback(result);
                 result = Utf8Decoder::INVALID;
             }
             return result;
@@ -47,6 +48,7 @@ namespace klex
             }
             else
             {
+                is.putback(result);
                 result = Utf8Decoder::INVALID;
             }
             return result;
@@ -54,7 +56,7 @@ namespace klex
 
     } // close unnamed namespace
 
-    int const Utf8Decoder::INVALID = 0x10FFFF + 1;
+    int const Utf8Decoder::INVALID = 0xFFFD;
 
     int Utf8Decoder::decode(std::istream& is) const
     {
@@ -96,7 +98,7 @@ namespace klex
                 result = utf8_continue(is, result);
             }
         }
-        else if (result <= 0xF4)
+        else if (result <= 0xF4 && result >= 0xF0)
         {
             int current_value = result & 0x7;
             if (result == 0xF0)

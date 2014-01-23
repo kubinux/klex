@@ -17,12 +17,16 @@
 #include "Utf8Decoder.h"
 #include <utility>
 #include <stdexcept>
+#include <cassert>
 
 namespace klex
 {
 
     InputStream::InputStream(std::unique_ptr<std::istream>&& stream)
-    : stream_(std::move(stream))
+    : stream_{std::move(stream)}
+    , buffer_{}
+    , line_{1}
+    , column_{1}
     {
     }
 
@@ -31,27 +35,45 @@ namespace klex
         int code_point = 0;
         if (!buffer_.empty())
         {
-            code_point = buffer_.back();
-            buffer_.pop_back();
+            code_point = buffer_.front();
+            buffer_.pop_front();
         }
         else
         {
             Utf8Decoder decoder;
             code_point = decoder.decode(*stream_);
-            if (code_point == 0)
-            {
-                throw std::runtime_error("InputStream: NUL character");
-            }
-            else if (code_point == Utf8Decoder::INVALID)
-            {
-                throw std::runtime_error("InputStream: invalid character");
-            }
-            else if (code_point == EOF)
-            {
-                code_point = 0;
-            }
+        }
+        if (code_point == '\n')
+        {
+            ++line_;
+            column_ = 1;
+        }
+        else if (code_point != EOF)
+        {
+            ++column_;
         }
         return code_point;
+    }
+
+    int InputStream::peek(std::uint8_t offset)
+    {
+        assert(offset < buffer_.max_size());
+        while (offset >= buffer_.size())
+        {
+            Utf8Decoder decoder;
+            buffer_.push_back(decoder.decode(*stream_));
+        }
+        return buffer_[offset];
+    }
+
+    int InputStream::get_line() const
+    {
+        return line_;
+    }
+
+    int InputStream::get_column() const
+    {
+        return column_;
     }
 
 } // close klex namespace
