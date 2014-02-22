@@ -37,11 +37,10 @@ namespace klex
             return result;
         }
 
-        template <int Min, int Max>
-        int utf8_continue(std::istream& is, int current_value)
+        int utf8_continue(std::istream& is, int current_value, int min, int max)
         {
             int result = is.get();
-            if (result >= Min && result <= Max)
+            if (result >= min && result <= max)
             {
                 result &= 0x3F;
                 result |= (current_value << 6);
@@ -83,11 +82,11 @@ namespace klex
             int current_value = result & 0xF;
             if (result == 0xE0)
             {
-                result = utf8_continue<0xA0, 0xBF>(is, current_value);
+                result = utf8_continue(is, current_value, 0xA0, 0xBF);
             }
             else if (result == 0xED)
             {
-                result = utf8_continue<0x80, 0x9F>(is, current_value);
+                result = utf8_continue(is, current_value, 0x80, 0x9F);
             }
             else
             {
@@ -103,11 +102,11 @@ namespace klex
             int current_value = result & 0x7;
             if (result == 0xF0)
             {
-                result = utf8_continue<0x90, 0xBF>(is, current_value);
+                result = utf8_continue(is, current_value, 0x90, 0xBF);
             }
             else if (result == 0xF4)
             {
-                result = utf8_continue<0x80, 0x8F>(is, current_value);
+                result = utf8_continue(is, current_value, 0x80, 0x8F);
             }
             else
             {
