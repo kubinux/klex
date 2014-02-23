@@ -22,50 +22,18 @@
 namespace klex
 {
 
-    namespace
-    {
-
-        void populate_buffer(CodePointBuffer& buffer,
-                             std::istream& stream,
-                             std::uint8_t max_num)
-        {
-            // Maps \r\n to \n and \r to \n.  Needs one extra space in the
-            // buffer in case \r was not followed by \n and we need to store
-            // that extra code point.
-            assert(max_num < buffer.max_size() - 1);
-            Utf8Decoder decoder;
-            while (max_num >= buffer.size())
-            {
-                int code_point = decoder.decode(stream);
-                if (code_point == '\r')
-                {
-                    buffer.push_back('\n');
-                    code_point = decoder.decode(stream);
-                    if (code_point != '\n')
-                    {
-                        buffer.push_back(code_point);
-                    }
-                }
-                else
-                {
-                    buffer.push_back(code_point);
-                }
-            }
-        }
-
-    } // close anonymous namespace
-
     InputStream::InputStream(std::unique_ptr<std::istream>&& stream)
     : stream_{std::move(stream)}
     , buffer_{}
     , line_{1}
     , column_{1}
+    , ignore_line_feed_{false}
     {
     }
 
     int InputStream::get()
     {
-        populate_buffer(buffer_, *stream_, 1);
+        populate_buffer(1);
         int code_point = buffer_.front();
         buffer_.pop_front();
         if (code_point == '\n')
@@ -82,7 +50,7 @@ namespace klex
 
     int InputStream::peek(std::uint8_t offset)
     {
-        populate_buffer(buffer_, *stream_, offset);
+        populate_buffer(offset);
         return buffer_[offset];
     }
 
@@ -94,6 +62,34 @@ namespace klex
     int InputStream::get_column() const
     {
         return column_;
+    }
+
+    void InputStream::populate_buffer(std::uint8_t num)
+    {
+        assert(num < buffer_.max_size());
+        Utf8Decoder decoder;
+        while (num >= buffer_.size())
+        {
+            int code_point = decoder.decode(*stream_);
+            if (code_point == '\r')
+            {
+                buffer_.push_back('\n');
+                ignore_line_feed_ = true;
+            }
+            else if (code_point == '\n')
+            {
+                if (!ignore_line_feed_)
+                {
+                    buffer_.push_back(code_point);
+                }
+                ignore_line_feed_ = false;
+            }
+            else
+            {
+                buffer_.push_back(code_point);
+                ignore_line_feed_ = false;
+            }
+        }
     }
 
 } // close klex namespace

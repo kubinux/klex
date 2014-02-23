@@ -39,10 +39,14 @@ namespace klex
         int get_column() const;
 
     private:
+        void populate_buffer(std::uint8_t num);
+
+    private:
         std::unique_ptr<std::istream> stream_;
         CodePointBuffer buffer_;
         int line_;
         int column_;
+        bool ignore_line_feed_;
     };
 
 } // close klex namespace
