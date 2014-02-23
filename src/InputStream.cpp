@@ -22,6 +22,39 @@
 namespace klex
 {
 
+    namespace
+    {
+
+        void populate_buffer(CodePointBuffer& buffer,
+                             std::istream& stream,
+                             std::uint8_t max_num)
+        {
+            // Maps \r\n to \n and \r to \n.  Needs one extra space in the
+            // buffer in case \r was not followed by \n and we need to store
+            // that extra code point.
+            assert(max_num < buffer.max_size() - 1);
+            Utf8Decoder decoder;
+            while (max_num >= buffer.size())
+            {
+                int code_point = decoder.decode(stream);
+                if (code_point == '\r')
+                {
+                    buffer.push_back('\n');
+                    code_point = decoder.decode(stream);
+                    if (code_point != '\n')
+                    {
+                        buffer.push_back(code_point);
+                    }
+                }
+                else
+                {
+                    buffer.push_back(code_point);
+                }
+            }
+        }
+
+    } // close anonymous namespace
+
     InputStream::InputStream(std::unique_ptr<std::istream>&& stream)
     : stream_{std::move(stream)}
     , buffer_{}
@@ -32,17 +65,9 @@ namespace klex
 
     int InputStream::get()
     {
-        int code_point = 0;
-        if (!buffer_.empty())
-        {
-            code_point = buffer_.front();
-            buffer_.pop_front();
-        }
-        else
-        {
-            Utf8Decoder decoder;
-            code_point = decoder.decode(*stream_);
-        }
+        populate_buffer(buffer_, *stream_, 1);
+        int code_point = buffer_.front();
+        buffer_.pop_front();
         if (code_point == '\n')
         {
             ++line_;
@@ -57,12 +82,7 @@ namespace klex
 
     int InputStream::peek(std::uint8_t offset)
     {
-        assert(offset < buffer_.max_size());
-        while (offset >= buffer_.size())
-        {
-            Utf8Decoder decoder;
-            buffer_.push_back(decoder.decode(*stream_));
-        }
+        populate_buffer(buffer_, *stream_, offset);
         return buffer_[offset];
     }
 
