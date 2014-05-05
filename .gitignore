@@ -24,6 +24,9 @@
 *~
 *.swp
 *.swo
+.yacbi
+.ycm_*
+.ropeproject
 
 # CMake
 CMakeCache.txt
@@ -34,4 +37,5 @@ install_manifest.txt
 build
 debug
 opt
+compile_commands.json
 
